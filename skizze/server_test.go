@@ -1,4 +1,4 @@
-package skizze
+package skizze_test
 
 import (
 	"net"

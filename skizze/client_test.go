@@ -1,4 +1,4 @@
-package skizze
+package skizze_test
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	pb "github.com/skizzehq/goskizze/datamodel"
+	. "github.com/skizzehq/goskizze/skizze"
 )
 
 func getClient(t *testing.T) (*Client, *fakeSkizze) {
