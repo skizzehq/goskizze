@@ -3,6 +3,7 @@ package skizze
 import (
 	"fmt"
 
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	pb "github.com/skizzehq/goskizze/datamodel"
@@ -32,5 +33,29 @@ func Dial(address string, opts Options) (*Client, error) {
 		opts:   opts,
 		conn:   conn,
 		client: pb.NewSkizzeClient(conn),
+	}, nil
+}
+
+// CreateSnapshot queues a snapshot operation.
+func (c *Client) CreateSnapshot() (*Snapshot, error) {
+	reply, err := c.client.CreateSnapshot(context.Background(), &pb.CreateSnapshotRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return &Snapshot{
+		Status:  snapshotStatusFromRaw(reply.GetStatus()),
+		Message: reply.GetStatusMessage(),
+	}, nil
+}
+
+// GetSnapshot retrieves the information on the current or last snapshot.
+func (c *Client) GetSnapshot() (*Snapshot, error) {
+	reply, err := c.client.GetSnapshot(context.Background(), &pb.GetSnapshotRequest{})
+	if err != nil {
+		return nil, err
+	}
+	return &Snapshot{
+		Status:  snapshotStatusFromRaw(reply.GetStatus()),
+		Message: reply.GetStatusMessage(),
 	}, nil
 }

@@ -2,6 +2,8 @@ package skizze
 
 import (
 	"net"
+	"strconv"
+	"sync/atomic"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -13,40 +15,52 @@ type fakeSkizze struct {
 	address string
 	ready   <-chan bool
 	server  *grpc.Server
+
+	nextReply interface{}
+	nextError error
 }
 
+var port int32 = 6100
+
 func newFakeSkizze() *fakeSkizze {
+	p := atomic.AddInt32(&port, 1)
+
 	ready := make(chan bool, 1)
-	address := ":6111"
+	address := ":" + strconv.Itoa(int(p))
 	fs := &fakeSkizze{
 		address: address,
 		ready:   ready,
 	}
 
 	go func() {
+		tries := 0
 		for {
 			listener, err := net.Listen("tcp", address)
 			if err != nil {
+				if tries < 5 {
+					tries++
+					continue
+				}
 				panic(err)
 			}
-			defer listener.Close()
 
 			fs.server = grpc.NewServer()
-			pb.RegisterSkizzeServer(fs.server, &fakeSkizze{})
+			pb.RegisterSkizzeServer(fs.server, fs)
 			ready <- true
 			fs.server.Serve(listener)
+			listener.Close()
 		}
 	}()
 
 	return fs
 }
 
-func (*fakeSkizze) CreateSnapshot(ctx context.Context, in *pb.CreateSnapshotRequest) (*pb.CreateSnapshotReply, error) {
-	return nil, nil
+func (f *fakeSkizze) CreateSnapshot(ctx context.Context, in *pb.CreateSnapshotRequest) (*pb.CreateSnapshotReply, error) {
+	return f.nextReply.(*pb.CreateSnapshotReply), f.nextError
 }
 
-func (*fakeSkizze) GetSnapshot(ctx context.Context, in *pb.GetSnapshotRequest) (*pb.GetSnapshotReply, error) {
-	return nil, nil
+func (f *fakeSkizze) GetSnapshot(ctx context.Context, in *pb.GetSnapshotRequest) (*pb.GetSnapshotReply, error) {
+	return f.nextReply.(*pb.GetSnapshotReply), f.nextError
 }
 
 func (*fakeSkizze) List(ctx context.Context, in *pb.ListRequest) (*pb.ListReply, error) {
