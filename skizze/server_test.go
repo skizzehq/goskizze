@@ -117,8 +117,9 @@ func (f *fakeSkizze) GetSketch(ctx context.Context, in *pb.Sketch) (*pb.Sketch, 
 
 }
 
-func (*fakeSkizze) Add(ctx context.Context, in *pb.AddRequest) (*pb.AddReply, error) {
-	return nil, nil
+func (f *fakeSkizze) Add(ctx context.Context, in *pb.AddRequest) (*pb.AddReply, error) {
+	f.lastRequest = in
+	return f.nextReply.(*pb.AddReply), f.nextError
 }
 
 func (*fakeSkizze) GetMembership(ctx context.Context, in *pb.GetRequest) (*pb.GetMembershipReply, error) {

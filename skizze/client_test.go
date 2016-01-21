@@ -322,3 +322,46 @@ func TestGetSketch(t *testing.T) {
 	req := fs.lastRequest.(*pb.Sketch)
 	assert.Equal("mysketchman", req.GetName())
 }
+
+func TestAddToSketch(t *testing.T) {
+	assert := assert.New(t)
+
+	c, fs := getClient(t)
+	defer closeAll(c, fs)
+
+	fs.nextReply = &pb.AddReply{}
+
+	values := []string{"one", "two", "three", "four", "five"}
+	err := c.AddToSketch("mysketchysketch", Cardinality, values...)
+	assert.Nil(err)
+
+	req := fs.lastRequest.(*pb.AddRequest)
+	assert.Nil(req.Domain)
+	assert.NotNil(req.Sketch)
+	assert.Equal(pb.SketchType_CARD, req.GetSketch().GetType())
+	assert.Equal(len(values), len(req.GetValues()))
+	for i, v := range req.GetValues() {
+		assert.Equal(values[i], v)
+	}
+}
+
+func TestAddToDomain(t *testing.T) {
+	assert := assert.New(t)
+
+	c, fs := getClient(t)
+	defer closeAll(c, fs)
+
+	fs.nextReply = &pb.AddReply{}
+
+	values := []string{"one", "two", "three", "four", "five", "six"}
+	err := c.AddToDomain("mysketchysketch", values...)
+	assert.Nil(err)
+
+	req := fs.lastRequest.(*pb.AddRequest)
+	assert.Nil(req.Sketch)
+	assert.NotNil(req.Domain)
+	assert.Equal(len(values), len(req.GetValues()))
+	for i, v := range req.GetValues() {
+		assert.Equal(values[i], v)
+	}
+}

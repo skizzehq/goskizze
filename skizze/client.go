@@ -181,3 +181,18 @@ func (c *Client) GetSketch(name string, t SketchType) (*Sketch, error) {
 	}
 	return newSketchFromRaw(reply), nil
 }
+
+// AddToSketch will add the supplied values to the sketch's data set.
+func (c *Client) AddToSketch(name string, t SketchType, values ...string) error {
+	rt := getRawSketchForSketchType(t)
+	rs := pb.Sketch{Name: &name, Type: &rt}
+	_, err := c.client.Add(context.Background(), &pb.AddRequest{Sketch: &rs, Values: values})
+	return err
+}
+
+// AddToDomain will add the supplied values to the domain's data set.
+func (c *Client) AddToDomain(name string, values ...string) error {
+	rd := pb.Domain{Name: &name}
+	_, err := c.client.Add(context.Background(), &pb.AddRequest{Domain: &rd, Values: values})
+	return err
+}
