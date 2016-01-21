@@ -122,18 +122,22 @@ func (f *fakeSkizze) Add(ctx context.Context, in *pb.AddRequest) (*pb.AddReply, 
 	return f.nextReply.(*pb.AddReply), f.nextError
 }
 
-func (*fakeSkizze) GetMembership(ctx context.Context, in *pb.GetRequest) (*pb.GetMembershipReply, error) {
-	return nil, nil
+func (f *fakeSkizze) GetMembership(ctx context.Context, in *pb.GetRequest) (*pb.GetMembershipReply, error) {
+	f.lastRequest = in
+	return f.nextReply.(*pb.GetMembershipReply), f.nextError
 }
 
-func (*fakeSkizze) GetFrequency(ctx context.Context, in *pb.GetRequest) (*pb.GetFrequencyReply, error) {
-	return nil, nil
+func (f *fakeSkizze) GetFrequency(ctx context.Context, in *pb.GetRequest) (*pb.GetFrequencyReply, error) {
+	f.lastRequest = in
+	return f.nextReply.(*pb.GetFrequencyReply), f.nextError
 }
 
-func (*fakeSkizze) GetCardinality(ctx context.Context, in *pb.GetRequest) (*pb.GetCardinalityReply, error) {
-	return nil, nil
+func (f *fakeSkizze) GetCardinality(ctx context.Context, in *pb.GetRequest) (*pb.GetCardinalityReply, error) {
+	f.lastRequest = in
+	return f.nextReply.(*pb.GetCardinalityReply), f.nextError
 }
 
-func (*fakeSkizze) GetRank(ctx context.Context, in *pb.GetRequest) (*pb.GetRankReply, error) {
-	return nil, nil
+func (f *fakeSkizze) GetRank(ctx context.Context, in *pb.GetRequest) (*pb.GetRankReply, error) {
+	f.lastRequest = in
+	return f.nextReply.(*pb.GetRankReply), f.nextError
 }

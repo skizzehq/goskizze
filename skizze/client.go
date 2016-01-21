@@ -196,3 +196,56 @@ func (c *Client) AddToDomain(name string, values ...string) error {
 	_, err := c.client.Add(context.Background(), &pb.AddRequest{Domain: &rd, Values: values})
 	return err
 }
+
+// GetMembership queries the sketch for membership (true/false) for the provided values.
+func (c *Client) GetMembership(name string, values ...string) (ret []*MembershipResult, err error) {
+	rt := pb.SketchType_MEMB
+	rs := pb.Sketch{Name: &name, Type: &rt}
+	reply, err := c.client.GetMembership(context.Background(), &pb.GetRequest{Sketch: &rs, Values: values})
+	if err != nil {
+		return nil, err
+	}
+	for _, m := range reply.GetMemberships() {
+		ret = append(ret, &MembershipResult{Value: m.GetValue(), IsMember: m.GetIsMember()})
+	}
+	return ret, nil
+}
+
+// GetFrequency queries the sketch for frequency for the provided values.
+func (c *Client) GetFrequency(name string, values ...string) (ret []*FrequencyResult, err error) {
+	rt := pb.SketchType_FREQ
+	rs := pb.Sketch{Name: &name, Type: &rt}
+	reply, err := c.client.GetFrequency(context.Background(), &pb.GetRequest{Sketch: &rs, Values: values})
+	if err != nil {
+		return nil, err
+	}
+	for _, m := range reply.GetFrequencies() {
+		ret = append(ret, &FrequencyResult{Value: m.GetValue(), Count: m.GetCount()})
+	}
+	return ret, nil
+}
+
+// GetRankings queries the sketch for the top rankings.
+func (c *Client) GetRankings(name string) (ret []*RankingsResult, err error) {
+	rt := pb.SketchType_RANK
+	rs := pb.Sketch{Name: &name, Type: &rt}
+	reply, err := c.client.GetRank(context.Background(), &pb.GetRequest{Sketch: &rs})
+	if err != nil {
+		return nil, err
+	}
+	for _, m := range reply.GetRanks() {
+		ret = append(ret, &RankingsResult{Value: m.GetValue(), Count: m.GetCount()})
+	}
+	return ret, nil
+}
+
+// GetCardinality queries the sketch for the top rankings.
+func (c *Client) GetCardinality(name string) (int64, error) {
+	rt := pb.SketchType_CARD
+	rs := pb.Sketch{Name: &name, Type: &rt}
+	reply, err := c.client.GetCardinality(context.Background(), &pb.GetRequest{Sketch: &rs})
+	if err != nil {
+		return 0, err
+	}
+	return reply.GetCardinality(), nil
+}
