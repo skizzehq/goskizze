@@ -177,3 +177,35 @@ func TestListDomains(t *testing.T) {
 		assert.Equal(n, domains[i].Name)
 	}
 }
+
+func TestGetDefaults(t *testing.T) {
+	assert := assert.New(t)
+
+	c, fs := getClient(t)
+	defer closeAll(c, fs)
+
+	d := Defaults{Rank: 22, Capacity: 10000000}
+	fs.nextReply = &pb.Defaults{Rank: &d.Rank, Capacity: &d.Capacity}
+
+	defaults, err := c.GetDefaults()
+	assert.Nil(err)
+	assert.NotNil(defaults)
+	assert.Equal(d.Rank, defaults.Rank)
+	assert.Equal(d.Capacity, defaults.Capacity)
+}
+
+func TestSetDefaults(t *testing.T) {
+	assert := assert.New(t)
+
+	c, fs := getClient(t)
+	defer closeAll(c, fs)
+
+	d := Defaults{Rank: 22, Capacity: 10000000}
+	fs.nextReply = &pb.Defaults{Rank: &d.Rank, Capacity: &d.Capacity}
+
+	defaults, err := c.SetDefaults(&d)
+	assert.Nil(err)
+	assert.NotNil(defaults)
+	assert.Equal(d.Rank, defaults.Rank)
+	assert.Equal(d.Capacity, defaults.Capacity)
+}

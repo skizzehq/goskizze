@@ -67,6 +67,24 @@ func (c *Client) GetSnapshot() (*Snapshot, error) {
 	}, nil
 }
 
+// GetDefaults gets the default settings for newly created sketches.
+func (c *Client) GetDefaults() (*Defaults, error) {
+	reply, err := c.client.GetDefaults(context.Background(), &pb.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	return newDefaultsFromRaw(reply), nil
+}
+
+// SetDefaults changes the default settings for newly created sketches.
+func (c *Client) SetDefaults(d *Defaults) (*Defaults, error) {
+	reply, err := c.client.SetDefaults(context.Background(), getRawDefaultsFromDefaults(d))
+	if err != nil {
+		return nil, err
+	}
+	return newDefaultsFromRaw(reply), nil
+}
+
 // ListAll gets all the available Sketches.
 func (c *Client) ListAll() (ret []*Sketch, err error) {
 	reply, err := c.client.ListAll(context.Background(), &pb.Empty{})
