@@ -267,3 +267,58 @@ func TestGetDomain(t *testing.T) {
 	req := fs.lastRequest.(*pb.Domain)
 	assert.Equal("mydomainman", req.GetName())
 }
+
+func TestCreateSketch(t *testing.T) {
+	assert := assert.New(t)
+
+	c, fs := getClient(t)
+	defer closeAll(c, fs)
+
+	st := pb.SketchType_RANK
+	fs.nextReply = &pb.Sketch{Name: stringp("mysketch"), Type: &st}
+
+	d, err := c.CreateSketch("mysketch", Ranking, &Defaults{Rank: 1000, Capacity: 100000})
+	assert.Nil(err)
+	assert.NotNil(d)
+	assert.Equal("mysketch", d.Name)
+	assert.Equal(Ranking, d.Type)
+
+	req := fs.lastRequest.(*pb.Sketch)
+	assert.Equal("mysketch", req.GetName())
+	assert.Equal(int64(1000), req.GetDefaults().GetRank())
+	assert.Equal(int64(100000), req.GetDefaults().GetCapacity())
+}
+
+func TestDeleteSketch(t *testing.T) {
+	assert := assert.New(t)
+
+	c, fs := getClient(t)
+	defer closeAll(c, fs)
+
+	fs.nextReply = &pb.Empty{}
+
+	err := c.DeleteSketch("mysketch", Frequency)
+	assert.Nil(err)
+
+	req := fs.lastRequest.(*pb.Sketch)
+	assert.Equal("mysketch", req.GetName())
+}
+
+func TestGetSketch(t *testing.T) {
+	assert := assert.New(t)
+
+	c, fs := getClient(t)
+	defer closeAll(c, fs)
+
+	st := pb.SketchType_CARD
+	fs.nextReply = &pb.Sketch{Name: stringp("mysketchman"), Type: &st}
+
+	d, err := c.GetSketch("mysketchman", Cardinality)
+	assert.Nil(err)
+	assert.NotNil(d)
+	assert.Equal("mysketchman", d.Name)
+	assert.Equal(Cardinality, d.Type)
+
+	req := fs.lastRequest.(*pb.Sketch)
+	assert.Equal("mysketchman", req.GetName())
+}

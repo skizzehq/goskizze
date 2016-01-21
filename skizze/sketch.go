@@ -27,9 +27,20 @@ type Sketch struct {
 }
 
 func newSketchFromRaw(s *pb.Sketch) *Sketch {
+	if s == nil {
+		return nil
+	}
 	return &Sketch{
 		Name: s.GetName(),
 		Type: getSketchTypeForRawType(s.GetType()),
+	}
+}
+
+func getRawSketchFromSketch(s Sketch) *pb.Sketch {
+	t := getRawSketchForSketchType(s.Type)
+	return &pb.Sketch{
+		Name: &s.Name,
+		Type: &t,
 	}
 }
 

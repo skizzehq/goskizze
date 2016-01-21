@@ -148,3 +148,36 @@ func (c *Client) GetDomain(name string) (*Domain, error) {
 	}
 	return newDomainFromRaw(reply), nil
 }
+
+// CreateSketch creates a new sketch.
+func (c *Client) CreateSketch(name string, t SketchType, defaults *Defaults) (*Sketch, error) {
+	rt := getRawSketchForSketchType(t)
+	rd := &pb.Sketch{Name: &name, Type: &rt, Defaults: getRawDefaultsFromDefaults(defaults)}
+	reply, err := c.client.CreateSketch(context.Background(), rd)
+	if err != nil {
+		return nil, err
+	}
+	return newSketchFromRaw(reply), nil
+}
+
+// DeleteSketch deletes a sketch
+func (c *Client) DeleteSketch(name string, t SketchType) error {
+	rt := getRawSketchForSketchType(t)
+	rd := &pb.Sketch{Name: &name, Type: &rt}
+	_, err := c.client.DeleteSketch(context.Background(), rd)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetSketch gets the details of a sketch.
+func (c *Client) GetSketch(name string, t SketchType) (*Sketch, error) {
+	rt := getRawSketchForSketchType(t)
+	rd := &pb.Sketch{Name: &name, Type: &rt}
+	reply, err := c.client.GetSketch(context.Background(), rd)
+	if err != nil {
+		return nil, err
+	}
+	return newSketchFromRaw(reply), nil
+}
