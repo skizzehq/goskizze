@@ -36,6 +36,13 @@ func Dial(address string, opts Options) (*Client, error) {
 	}, nil
 }
 
+// Close shuts down the client connection to Skizze.
+func (c *Client) Close() {
+	if c.conn != nil {
+		c.conn.Close()
+	}
+}
+
 // CreateSnapshot queues a snapshot operation.
 func (c *Client) CreateSnapshot() (*Snapshot, error) {
 	reply, err := c.client.CreateSnapshot(context.Background(), &pb.CreateSnapshotRequest{})
@@ -58,4 +65,41 @@ func (c *Client) GetSnapshot() (*Snapshot, error) {
 		Status:  snapshotStatusFromRaw(reply.GetStatus()),
 		Message: reply.GetStatusMessage(),
 	}, nil
+}
+
+// ListAll gets all the available Sketches.
+func (c *Client) ListAll() (ret []*Sketch, err error) {
+	reply, err := c.client.ListAll(context.Background(), &pb.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	for _, sketch := range reply.GetSketches() {
+		ret = append(ret, newSketchFromRaw(sketch))
+	}
+	return ret, err
+}
+
+// ListSketches gets all the sketches of the specified type.
+func (c *Client) ListSketches(t SketchType) (ret []*Sketch, err error) {
+	rt := getRawSketchForSketchType(t)
+	reply, err := c.client.List(context.Background(), &pb.ListRequest{Type: &rt})
+	if err != nil {
+		return nil, err
+	}
+	for _, sketch := range reply.GetSketches() {
+		ret = append(ret, newSketchFromRaw(sketch))
+	}
+	return ret, err
+}
+
+// ListDomains gets all the available domains
+func (c *Client) ListDomains() (ret []*Domain, err error) {
+	reply, err := c.client.ListDomains(context.Background(), &pb.Empty{})
+	if err != nil {
+		return nil, err
+	}
+	for _, name := range reply.GetName() {
+		ret = append(ret, &Domain{Name: name})
+	}
+	return ret, err
 }

@@ -63,16 +63,16 @@ func (f *fakeSkizze) GetSnapshot(ctx context.Context, in *pb.GetSnapshotRequest)
 	return f.nextReply.(*pb.GetSnapshotReply), f.nextError
 }
 
-func (*fakeSkizze) List(ctx context.Context, in *pb.ListRequest) (*pb.ListReply, error) {
-	return nil, nil
+func (f *fakeSkizze) List(ctx context.Context, in *pb.ListRequest) (*pb.ListReply, error) {
+	return f.nextReply.(*pb.ListReply), f.nextError
 }
 
-func (*fakeSkizze) ListAll(ctx context.Context, in *pb.Empty) (*pb.ListReply, error) {
-	return nil, nil
+func (f *fakeSkizze) ListAll(ctx context.Context, in *pb.Empty) (*pb.ListReply, error) {
+	return f.nextReply.(*pb.ListReply), f.nextError
 }
 
-func (*fakeSkizze) ListDomains(ctx context.Context, in *pb.Empty) (*pb.ListDomainsReply, error) {
-	return nil, nil
+func (f *fakeSkizze) ListDomains(ctx context.Context, in *pb.Empty) (*pb.ListDomainsReply, error) {
+	return f.nextReply.(*pb.ListDomainsReply), f.nextError
 }
 
 func (*fakeSkizze) SetDefaults(ctx context.Context, in *pb.Defaults) (*pb.Defaults, error) {

@@ -22,6 +22,15 @@ func getClient(t *testing.T) (*Client, *fakeSkizze) {
 	return c, fs
 }
 
+func closeAll(c *Client, fs *fakeSkizze) {
+	c.Close()
+	fs.server.Stop()
+}
+
+func stringp(s string) *string {
+	return &s
+}
+
 func TestDial(t *testing.T) {
 	_, fs := getClient(t)
 	fs.server.Stop()
@@ -31,7 +40,7 @@ func TestCreateSnapshot(t *testing.T) {
 	assert := assert.New(t)
 
 	c, fs := getClient(t)
-	defer fs.server.Stop()
+	defer closeAll(c, fs)
 
 	rawStatuses := []pb.SnapshotStatus{
 		pb.SnapshotStatus_PENDING,
@@ -65,7 +74,7 @@ func TestGetSnapshot(t *testing.T) {
 	assert := assert.New(t)
 
 	c, fs := getClient(t)
-	defer fs.server.Stop()
+	defer closeAll(c, fs)
 
 	rawStatuses := []pb.SnapshotStatus{
 		pb.SnapshotStatus_PENDING,
@@ -92,5 +101,79 @@ func TestGetSnapshot(t *testing.T) {
 		assert.NotNil(s)
 		assert.Nil(err)
 		assert.Equal(statuses[i], s.Status)
+	}
+}
+
+func TestListAll(t *testing.T) {
+	assert := assert.New(t)
+
+	c, fs := getClient(t)
+	defer closeAll(c, fs)
+
+	types := []pb.SketchType{pb.SketchType_MEMB, pb.SketchType_FREQ, pb.SketchType_RANK, pb.SketchType_CARD}
+	ret := []*pb.Sketch{
+		&pb.Sketch{Name: stringp("foobar"), Type: &types[0]},
+		&pb.Sketch{Name: stringp("hoobar"), Type: &types[1]},
+		&pb.Sketch{Name: stringp("joobar"), Type: &types[2]},
+		&pb.Sketch{Name: stringp("loobar"), Type: &types[3]},
+	}
+	fs.nextReply = &pb.ListReply{
+		Sketches: ret,
+	}
+
+	sketches, err := c.ListAll()
+	assert.NotNil(sketches)
+	assert.Nil(err)
+	assert.Equal(4, len(sketches))
+
+	for i, sketch := range sketches {
+		assert.Equal(ret[i].GetName(), sketch.Name)
+	}
+}
+
+func TestListSketches(t *testing.T) {
+	assert := assert.New(t)
+
+	c, fs := getClient(t)
+	defer closeAll(c, fs)
+
+	types := []pb.SketchType{pb.SketchType_MEMB, pb.SketchType_FREQ, pb.SketchType_RANK, pb.SketchType_CARD}
+	stypes := []SketchType{Membership, Frequency, Ranking, Cardinality}
+	ret := []*pb.Sketch{
+		&pb.Sketch{Name: stringp("foobar"), Type: &types[0]},
+		&pb.Sketch{Name: stringp("hoobar"), Type: &types[1]},
+		&pb.Sketch{Name: stringp("joobar"), Type: &types[2]},
+		&pb.Sketch{Name: stringp("loobar"), Type: &types[3]},
+	}
+	fs.nextReply = &pb.ListReply{
+		Sketches: ret,
+	}
+
+	sketches, err := c.ListSketches(Membership)
+	assert.NotNil(sketches)
+	assert.Nil(err)
+	assert.Equal(4, len(sketches))
+
+	for i, sketch := range sketches {
+		assert.Equal(ret[i].GetName(), sketch.Name)
+		assert.Equal(stypes[i], sketch.Type)
+	}
+}
+
+func TestListDomains(t *testing.T) {
+	assert := assert.New(t)
+
+	c, fs := getClient(t)
+	defer closeAll(c, fs)
+
+	names := []string{"dom1", "dom2", "dom3", "dom4"}
+	fs.nextReply = &pb.ListDomainsReply{Name: names}
+
+	domains, err := c.ListDomains()
+	assert.NotNil(domains)
+	assert.Nil(err)
+	assert.Equal(len(names), len(domains))
+	for i, n := range names {
+		assert.Equal(n, domains[i].Name)
 	}
 }

@@ -38,6 +38,6 @@ func snapshotStatusFromRaw(s pb.SnapshotStatus) SnapshotState {
 		return Failed
 	default:
 		log.Panicf("Snapshot status %v unknown", s)
+		return 0
 	}
-	return Pending
 }
