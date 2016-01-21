@@ -154,6 +154,9 @@ func TestListSketches(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(4, len(sketches))
 
+	req := fs.lastRequest.(*pb.ListRequest)
+	assert.Equal(pb.SketchType_MEMB, req.GetType())
+
 	for i, sketch := range sketches {
 		assert.Equal(ret[i].GetName(), sketch.Name)
 		assert.Equal(stypes[i], sketch.Type)
@@ -174,7 +177,7 @@ func TestListDomains(t *testing.T) {
 	assert.Nil(err)
 	assert.Equal(len(names), len(domains))
 	for i, n := range names {
-		assert.Equal(n, domains[i].Name)
+		assert.Equal(n, domains[i])
 	}
 }
 
@@ -208,4 +211,59 @@ func TestSetDefaults(t *testing.T) {
 	assert.NotNil(defaults)
 	assert.Equal(d.Rank, defaults.Rank)
 	assert.Equal(d.Capacity, defaults.Capacity)
+
+	req := fs.lastRequest.(*pb.Defaults)
+	assert.Equal(d.Rank, req.GetRank())
+	assert.Equal(d.Capacity, req.GetCapacity())
+}
+
+func TestCreateDomain(t *testing.T) {
+	assert := assert.New(t)
+
+	c, fs := getClient(t)
+	defer closeAll(c, fs)
+
+	fs.nextReply = &pb.Domain{Name: stringp("mydomain")}
+
+	d, err := c.CreateDomain("mydomain", &Defaults{Rank: 1000, Capacity: 100000})
+	assert.Nil(err)
+	assert.NotNil(d)
+	assert.Equal("mydomain", d.Name)
+
+	req := fs.lastRequest.(*pb.Domain)
+	assert.Equal("mydomain", req.GetName())
+	assert.Equal(int64(1000), req.GetDefaults().GetRank())
+	assert.Equal(int64(100000), req.GetDefaults().GetCapacity())
+}
+
+func TestDeleteDomain(t *testing.T) {
+	assert := assert.New(t)
+
+	c, fs := getClient(t)
+	defer closeAll(c, fs)
+
+	fs.nextReply = &pb.Empty{}
+
+	err := c.DeleteDomain("mydomain")
+	assert.Nil(err)
+
+	req := fs.lastRequest.(*pb.Domain)
+	assert.Equal("mydomain", req.GetName())
+}
+
+func TestGetDomain(t *testing.T) {
+	assert := assert.New(t)
+
+	c, fs := getClient(t)
+	defer closeAll(c, fs)
+
+	fs.nextReply = &pb.Domain{Name: stringp("mydomainman")}
+
+	d, err := c.GetDomain("mydomainman")
+	assert.Nil(err)
+	assert.NotNil(d)
+	assert.Equal("mydomainman", d.Name)
+
+	req := fs.lastRequest.(*pb.Domain)
+	assert.Equal("mydomainman", req.GetName())
 }

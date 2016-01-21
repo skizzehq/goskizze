@@ -61,6 +61,6 @@ func getRawSketchForSketchType(t SketchType) pb.SketchType {
 		return pb.SketchType_CARD
 	default:
 		log.Panicf("SketchType %v unknown", t)
-		return pb.SketchType_UNKNOWN
+		return 0
 	}
 }

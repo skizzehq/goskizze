@@ -11,6 +11,9 @@ type Defaults struct {
 }
 
 func newDefaultsFromRaw(d *pb.Defaults) *Defaults {
+	if d == nil {
+		return nil
+	}
 	return &Defaults{
 		Rank:     d.GetRank(),
 		Capacity: d.GetCapacity(),
@@ -18,6 +21,9 @@ func newDefaultsFromRaw(d *pb.Defaults) *Defaults {
 }
 
 func getRawDefaultsFromDefaults(d *Defaults) *pb.Defaults {
+	if d == nil {
+		return nil
+	}
 	return &pb.Defaults{
 		Rank:     &d.Rank,
 		Capacity: &d.Capacity,

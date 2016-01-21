@@ -16,8 +16,9 @@ type fakeSkizze struct {
 	ready   <-chan bool
 	server  *grpc.Server
 
-	nextReply interface{}
-	nextError error
+	lastRequest interface{}
+	nextReply   interface{}
+	nextError   error
 }
 
 var port int32 = 6100
@@ -64,6 +65,7 @@ func (f *fakeSkizze) GetSnapshot(ctx context.Context, in *pb.GetSnapshotRequest)
 }
 
 func (f *fakeSkizze) List(ctx context.Context, in *pb.ListRequest) (*pb.ListReply, error) {
+	f.lastRequest = in
 	return f.nextReply.(*pb.ListReply), f.nextError
 }
 
@@ -76,6 +78,7 @@ func (f *fakeSkizze) ListDomains(ctx context.Context, in *pb.Empty) (*pb.ListDom
 }
 
 func (f *fakeSkizze) SetDefaults(ctx context.Context, in *pb.Defaults) (*pb.Defaults, error) {
+	f.lastRequest = in
 	return f.nextReply.(*pb.Defaults), f.nextError
 }
 
@@ -83,28 +86,35 @@ func (f *fakeSkizze) GetDefaults(ctx context.Context, in *pb.Empty) (*pb.Default
 	return f.nextReply.(*pb.Defaults), f.nextError
 }
 
-func (*fakeSkizze) CreateDomain(ctx context.Context, in *pb.Domain) (*pb.Domain, error) {
-	return nil, nil
+func (f *fakeSkizze) CreateDomain(ctx context.Context, in *pb.Domain) (*pb.Domain, error) {
+	f.lastRequest = in
+	return f.nextReply.(*pb.Domain), f.nextError
 }
 
-func (*fakeSkizze) DeleteDomain(ctx context.Context, in *pb.Domain) (*pb.Empty, error) {
-	return nil, nil
+func (f *fakeSkizze) DeleteDomain(ctx context.Context, in *pb.Domain) (*pb.Empty, error) {
+	f.lastRequest = in
+	return f.nextReply.(*pb.Empty), f.nextError
 }
 
-func (*fakeSkizze) GetDomain(ctx context.Context, in *pb.Domain) (*pb.Domain, error) {
-	return nil, nil
+func (f *fakeSkizze) GetDomain(ctx context.Context, in *pb.Domain) (*pb.Domain, error) {
+	f.lastRequest = in
+	return f.nextReply.(*pb.Domain), f.nextError
 }
 
-func (*fakeSkizze) CreateSketch(ctx context.Context, in *pb.Sketch) (*pb.Sketch, error) {
-	return nil, nil
+func (f *fakeSkizze) CreateSketch(ctx context.Context, in *pb.Sketch) (*pb.Sketch, error) {
+	f.lastRequest = in
+	return f.nextReply.(*pb.Sketch), f.nextError
 }
 
-func (*fakeSkizze) DeleteSketch(ctx context.Context, in *pb.Sketch) (*pb.Empty, error) {
-	return nil, nil
+func (f *fakeSkizze) DeleteSketch(ctx context.Context, in *pb.Sketch) (*pb.Empty, error) {
+	f.lastRequest = in
+	return f.nextReply.(*pb.Empty), f.nextError
 }
 
-func (*fakeSkizze) GetSketch(ctx context.Context, in *pb.Sketch) (*pb.Sketch, error) {
-	return nil, nil
+func (f *fakeSkizze) GetSketch(ctx context.Context, in *pb.Sketch) (*pb.Sketch, error) {
+	f.lastRequest = in
+	return f.nextReply.(*pb.Sketch), f.nextError
+
 }
 
 func (*fakeSkizze) Add(ctx context.Context, in *pb.AddRequest) (*pb.AddReply, error) {

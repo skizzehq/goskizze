@@ -111,13 +111,40 @@ func (c *Client) ListSketches(t SketchType) (ret []*Sketch, err error) {
 }
 
 // ListDomains gets all the available domains
-func (c *Client) ListDomains() (ret []*Domain, err error) {
+func (c *Client) ListDomains() (ret []string, err error) {
 	reply, err := c.client.ListDomains(context.Background(), &pb.Empty{})
 	if err != nil {
 		return nil, err
 	}
-	for _, name := range reply.GetName() {
-		ret = append(ret, &Domain{Name: name})
+	return reply.GetName(), nil
+}
+
+// CreateDomain creates a new domain.
+func (c *Client) CreateDomain(name string, defaults *Defaults) (*Domain, error) {
+	rd := &pb.Domain{Name: &name, Defaults: getRawDefaultsFromDefaults(defaults)}
+	reply, err := c.client.CreateDomain(context.Background(), rd)
+	if err != nil {
+		return nil, err
 	}
-	return ret, err
+	return newDomainFromRaw(reply), nil
+}
+
+// DeleteDomain deletes a domain
+func (c *Client) DeleteDomain(name string) error {
+	rd := &pb.Domain{Name: &name}
+	_, err := c.client.DeleteDomain(context.Background(), rd)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetDomain gets the details of a domain.
+func (c *Client) GetDomain(name string) (*Domain, error) {
+	rd := &pb.Domain{Name: &name}
+	reply, err := c.client.GetDomain(context.Background(), rd)
+	if err != nil {
+		return nil, err
+	}
+	return newDomainFromRaw(reply), nil
 }
