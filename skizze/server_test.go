@@ -77,15 +77,6 @@ func (f *fakeSkizze) ListDomains(ctx context.Context, in *pb.Empty) (*pb.ListDom
 	return f.nextReply.(*pb.ListDomainsReply), f.nextError
 }
 
-func (f *fakeSkizze) SetDefaults(ctx context.Context, in *pb.Defaults) (*pb.Defaults, error) {
-	f.lastRequest = in
-	return f.nextReply.(*pb.Defaults), f.nextError
-}
-
-func (f *fakeSkizze) GetDefaults(ctx context.Context, in *pb.Empty) (*pb.Defaults, error) {
-	return f.nextReply.(*pb.Defaults), f.nextError
-}
-
 func (f *fakeSkizze) CreateDomain(ctx context.Context, in *pb.Domain) (*pb.Domain, error) {
 	f.lastRequest = in
 	return f.nextReply.(*pb.Domain), f.nextError

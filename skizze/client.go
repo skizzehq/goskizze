@@ -9,6 +9,13 @@ import (
 	pb "github.com/skizzehq/goskizze/datamodel"
 )
 
+var (
+	typeMemb = pb.SketchType_MEMB
+	typeFreq = pb.SketchType_FREQ
+	typeRank = pb.SketchType_RANK
+	typeCard = pb.SketchType_CARD
+)
+
 // Client represents a a thread-safe connection to Skizze
 type Client struct {
 	opts Options
@@ -67,24 +74,6 @@ func (c *Client) GetSnapshot() (*Snapshot, error) {
 	}, nil
 }
 
-// GetDefaults gets the default settings for newly created sketches.
-func (c *Client) GetDefaults() (*Defaults, error) {
-	reply, err := c.client.GetDefaults(context.Background(), &pb.Empty{})
-	if err != nil {
-		return nil, err
-	}
-	return newDefaultsFromRaw(reply), nil
-}
-
-// SetDefaults changes the default settings for newly created sketches.
-func (c *Client) SetDefaults(d *Defaults) (*Defaults, error) {
-	reply, err := c.client.SetDefaults(context.Background(), getRawDefaultsFromDefaults(d))
-	if err != nil {
-		return nil, err
-	}
-	return newDefaultsFromRaw(reply), nil
-}
-
 // ListAll gets all the available Sketches.
 func (c *Client) ListAll() (ret []*Sketch, err error) {
 	reply, err := c.client.ListAll(context.Background(), &pb.Empty{})
@@ -116,12 +105,41 @@ func (c *Client) ListDomains() (ret []string, err error) {
 	if err != nil {
 		return nil, err
 	}
-	return reply.GetName(), nil
+	return reply.GetNames(), nil
 }
 
-// CreateDomain creates a new domain.
-func (c *Client) CreateDomain(name string, defaults *Defaults) (*Domain, error) {
-	rd := &pb.Domain{Name: &name, Defaults: getRawDefaultsFromDefaults(defaults)}
+// CreateDomain creates a new domain with default properties per Sketch.
+func (c *Client) CreateDomain(name string) (*Domain, error) {
+	rd := &pb.Domain{Name: &name}
+
+	rd.Sketches = append(rd.Sketches, &pb.Sketch{
+		Name: &name,
+		Type: &typeMemb,
+		Properties: &pb.SketchProperties{
+			MaxUniqueItems: &defaultMembUnique,
+			ErrorRate:      &defaultMembErrorRate,
+		},
+	})
+	rd.Sketches = append(rd.Sketches, &pb.Sketch{
+		Name: &name,
+		Type: &typeFreq,
+		Properties: &pb.SketchProperties{
+			MaxUniqueItems: &defaultFreqUnique,
+			ErrorRate:      &defaultFreqErrorRate,
+		},
+	})
+	rd.Sketches = append(rd.Sketches, &pb.Sketch{
+		Name: &name,
+		Type: &typeRank,
+		Properties: &pb.SketchProperties{
+			Size: &defaultRankSize,
+		},
+	})
+	rd.Sketches = append(rd.Sketches, &pb.Sketch{
+		Name: &name,
+		Type: &typeCard,
+	})
+
 	reply, err := c.client.CreateDomain(context.Background(), rd)
 	if err != nil {
 		return nil, err
@@ -150,9 +168,9 @@ func (c *Client) GetDomain(name string) (*Domain, error) {
 }
 
 // CreateSketch creates a new sketch.
-func (c *Client) CreateSketch(name string, t SketchType, defaults *Defaults) (*Sketch, error) {
+func (c *Client) CreateSketch(name string, t SketchType, p *Properties) (*Sketch, error) {
 	rt := getRawSketchForSketchType(t)
-	rd := &pb.Sketch{Name: &name, Type: &rt, Defaults: getRawDefaultsFromDefaults(defaults)}
+	rd := &pb.Sketch{Name: &name, Type: &rt, Properties: newRawPropertiesFromProperties(p)}
 	reply, err := c.client.CreateSketch(context.Background(), rd)
 	if err != nil {
 		return nil, err
@@ -199,13 +217,12 @@ func (c *Client) AddToDomain(name string, values ...string) error {
 
 // GetMembership queries the sketch for membership (true/false) for the provided values.
 func (c *Client) GetMembership(name string, values ...string) (ret []*MembershipResult, err error) {
-	rt := pb.SketchType_MEMB
-	rs := pb.Sketch{Name: &name, Type: &rt}
-	reply, err := c.client.GetMembership(context.Background(), &pb.GetRequest{Sketch: &rs, Values: values})
+	rs := pb.Sketch{Name: &name, Type: &typeMemb}
+	reply, err := c.client.GetMembership(context.Background(), &pb.GetRequest{Sketches: []*pb.Sketch{&rs}, Values: values})
 	if err != nil {
 		return nil, err
 	}
-	for _, m := range reply.GetMemberships() {
+	for _, m := range reply.GetResults()[0].GetMemberships() {
 		ret = append(ret, &MembershipResult{Value: m.GetValue(), IsMember: m.GetIsMember()})
 	}
 	return ret, nil
@@ -213,13 +230,12 @@ func (c *Client) GetMembership(name string, values ...string) (ret []*Membership
 
 // GetFrequency queries the sketch for frequency for the provided values.
 func (c *Client) GetFrequency(name string, values ...string) (ret []*FrequencyResult, err error) {
-	rt := pb.SketchType_FREQ
-	rs := pb.Sketch{Name: &name, Type: &rt}
-	reply, err := c.client.GetFrequency(context.Background(), &pb.GetRequest{Sketch: &rs, Values: values})
+	rs := pb.Sketch{Name: &name, Type: &typeFreq}
+	reply, err := c.client.GetFrequency(context.Background(), &pb.GetRequest{Sketches: []*pb.Sketch{&rs}, Values: values})
 	if err != nil {
 		return nil, err
 	}
-	for _, m := range reply.GetFrequencies() {
+	for _, m := range reply.GetResults()[0].GetFrequencies() {
 		ret = append(ret, &FrequencyResult{Value: m.GetValue(), Count: m.GetCount()})
 	}
 	return ret, nil
@@ -227,13 +243,12 @@ func (c *Client) GetFrequency(name string, values ...string) (ret []*FrequencyRe
 
 // GetRankings queries the sketch for the top rankings.
 func (c *Client) GetRankings(name string) (ret []*RankingsResult, err error) {
-	rt := pb.SketchType_RANK
-	rs := pb.Sketch{Name: &name, Type: &rt}
-	reply, err := c.client.GetRank(context.Background(), &pb.GetRequest{Sketch: &rs})
+	rs := pb.Sketch{Name: &name, Type: &typeRank}
+	reply, err := c.client.GetRankings(context.Background(), &pb.GetRequest{Sketches: []*pb.Sketch{&rs}})
 	if err != nil {
 		return nil, err
 	}
-	for _, m := range reply.GetRanks() {
+	for _, m := range reply.GetResults()[0].GetRankings() {
 		ret = append(ret, &RankingsResult{Value: m.GetValue(), Count: m.GetCount()})
 	}
 	return ret, nil
@@ -241,11 +256,10 @@ func (c *Client) GetRankings(name string) (ret []*RankingsResult, err error) {
 
 // GetCardinality queries the sketch for the top rankings.
 func (c *Client) GetCardinality(name string) (int64, error) {
-	rt := pb.SketchType_CARD
-	rs := pb.Sketch{Name: &name, Type: &rt}
-	reply, err := c.client.GetCardinality(context.Background(), &pb.GetRequest{Sketch: &rs})
+	rs := pb.Sketch{Name: &name, Type: &typeCard}
+	reply, err := c.client.GetCardinality(context.Background(), &pb.GetRequest{Sketches: []*pb.Sketch{&rs}})
 	if err != nil {
 		return 0, err
 	}
-	return reply.GetCardinality(), nil
+	return reply.GetResults()[0].GetCardinality(), nil
 }
