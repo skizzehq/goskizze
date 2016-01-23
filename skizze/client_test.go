@@ -170,7 +170,7 @@ func TestListDomains(t *testing.T) {
 	defer closeAll(c, fs)
 
 	names := []string{"dom1", "dom2", "dom3", "dom4"}
-	fs.nextReply = &pb.ListDomainsReply{Name: names}
+	fs.nextReply = &pb.ListDomainsReply{Names: names}
 
 	domains, err := c.ListDomains()
 	assert.NotNil(domains)
@@ -189,15 +189,13 @@ func TestCreateDomain(t *testing.T) {
 
 	fs.nextReply = &pb.Domain{Name: stringp("mydomain")}
 
-	d, err := c.CreateDomain("mydomain", &Defaults{Rank: 1000, Capacity: 100000})
+	d, err := c.CreateDomain("mydomain")
 	assert.Nil(err)
 	assert.NotNil(d)
 	assert.Equal("mydomain", d.Name)
 
 	req := fs.lastRequest.(*pb.Domain)
 	assert.Equal("mydomain", req.GetName())
-	assert.Equal(int64(1000), req.GetDefaults().GetRank())
-	assert.Equal(int64(100000), req.GetDefaults().GetCapacity())
 }
 
 func TestDeleteDomain(t *testing.T) {
@@ -241,7 +239,7 @@ func TestCreateSketch(t *testing.T) {
 	st := pb.SketchType_RANK
 	fs.nextReply = &pb.Sketch{Name: stringp("mysketch"), Type: &st}
 
-	d, err := c.CreateSketch("mysketch", Ranking, &Defaults{Rank: 1000, Capacity: 100000})
+	d, err := c.CreateSketch("mysketch", Ranking, &Properties{Size: 1000})
 	assert.Nil(err)
 	assert.NotNil(d)
 	assert.Equal("mysketch", d.Name)
@@ -249,8 +247,7 @@ func TestCreateSketch(t *testing.T) {
 
 	req := fs.lastRequest.(*pb.Sketch)
 	assert.Equal("mysketch", req.GetName())
-	assert.Equal(int64(1000), req.GetDefaults().GetRank())
-	assert.Equal(int64(100000), req.GetDefaults().GetCapacity())
+	assert.Equal(int64(1000), req.GetProperties().GetSize())
 }
 
 func TestDeleteSketch(t *testing.T) {
@@ -338,13 +335,13 @@ func TestGetMembership(t *testing.T) {
 
 	yes := true
 	no := false
-	r := &pb.GetMembershipReply{}
+	r := &pb.MembershipResult{}
 	r.Memberships = []*pb.Membership{
 		&pb.Membership{Value: stringp("one"), IsMember: &yes},
 		&pb.Membership{Value: stringp("two"), IsMember: &no},
 		&pb.Membership{Value: stringp("one"), IsMember: &yes},
 	}
-	fs.nextReply = r
+	fs.nextReply = &pb.GetMembershipReply{Results: []*pb.MembershipResult{r}}
 
 	values := []string{"foo", "bar", "baz"}
 	m, err := c.GetMembership("mymembers", values...)
@@ -357,8 +354,8 @@ func TestGetMembership(t *testing.T) {
 	}
 
 	req := fs.lastRequest.(*pb.GetRequest)
-	assert.Equal("mymembers", req.GetSketch().GetName())
-	assert.Equal(pb.SketchType_MEMB, req.GetSketch().GetType())
+	assert.Equal("mymembers", req.GetSketches()[0].GetName())
+	assert.Equal(pb.SketchType_MEMB, req.GetSketches()[0].GetType())
 	for i, v := range req.GetValues() {
 		assert.Equal(values[i], v)
 	}
@@ -373,13 +370,13 @@ func TestGetFrequency(t *testing.T) {
 	one := int64(1)
 	thou := int64(1000)
 
-	r := &pb.GetFrequencyReply{}
+	r := &pb.FrequencyResult{}
 	r.Frequencies = []*pb.Frequency{
 		&pb.Frequency{Value: stringp("one"), Count: &one},
 		&pb.Frequency{Value: stringp("two"), Count: &thou},
 		&pb.Frequency{Value: stringp("one"), Count: &one},
 	}
-	fs.nextReply = r
+	fs.nextReply = &pb.GetFrequencyReply{Results: []*pb.FrequencyResult{r}}
 
 	values := []string{"foo", "bar", "baz"}
 	m, err := c.GetFrequency("mymembers", values...)
@@ -392,8 +389,8 @@ func TestGetFrequency(t *testing.T) {
 	}
 
 	req := fs.lastRequest.(*pb.GetRequest)
-	assert.Equal("mymembers", req.GetSketch().GetName())
-	assert.Equal(pb.SketchType_FREQ, req.GetSketch().GetType())
+	assert.Equal("mymembers", req.GetSketches()[0].GetName())
+	assert.Equal(pb.SketchType_FREQ, req.GetSketches()[0].GetType())
 	for i, v := range req.GetValues() {
 		assert.Equal(values[i], v)
 	}
@@ -408,25 +405,25 @@ func TestGetRankings(t *testing.T) {
 	one := int64(1)
 	thou := int64(1000)
 
-	r := &pb.GetRankReply{}
-	r.Ranks = []*pb.Rank{
+	r := &pb.RankingsResult{}
+	r.Rankings = []*pb.Rank{
 		&pb.Rank{Value: stringp("one"), Count: &one},
 		&pb.Rank{Value: stringp("two"), Count: &thou},
 		&pb.Rank{Value: stringp("one"), Count: &one},
 	}
-	fs.nextReply = r
+	fs.nextReply = &pb.GetRankingsReply{Results: []*pb.RankingsResult{r}}
 
 	m, err := c.GetRankings("mymembers")
 	assert.Nil(err)
 	assert.NotNil(m)
-	for i, v := range r.Ranks {
+	for i, v := range r.Rankings {
 		assert.Equal(v.GetValue(), m[i].Value)
 		assert.Equal(v.GetCount(), m[i].Count)
 	}
 
 	req := fs.lastRequest.(*pb.GetRequest)
-	assert.Equal("mymembers", req.GetSketch().GetName())
-	assert.Equal(pb.SketchType_RANK, req.GetSketch().GetType())
+	assert.Equal("mymembers", req.GetSketches()[0].GetName())
+	assert.Equal(pb.SketchType_RANK, req.GetSketches()[0].GetType())
 }
 
 func TestGetCardinality(t *testing.T) {
@@ -437,13 +434,19 @@ func TestGetCardinality(t *testing.T) {
 
 	thou := int64(1000)
 
-	fs.nextReply = &pb.GetCardinalityReply{Cardinality: &thou}
+	fs.nextReply = &pb.GetCardinalityReply{
+		Results: []*pb.CardinalityResult{
+			&pb.CardinalityResult{
+				Cardinality: &thou,
+			},
+		},
+	}
 
 	card, err := c.GetCardinality("mymembers")
 	assert.Nil(err)
 	assert.Equal(thou, card)
 
 	req := fs.lastRequest.(*pb.GetRequest)
-	assert.Equal("mymembers", req.GetSketch().GetName())
-	assert.Equal(pb.SketchType_CARD, req.GetSketch().GetType())
+	assert.Equal("mymembers", req.GetSketches()[0].GetName())
+	assert.Equal(pb.SketchType_CARD, req.GetSketches()[0].GetType())
 }

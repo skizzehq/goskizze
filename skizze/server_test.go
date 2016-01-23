@@ -128,7 +128,7 @@ func (f *fakeSkizze) GetCardinality(ctx context.Context, in *pb.GetRequest) (*pb
 	return f.nextReply.(*pb.GetCardinalityReply), f.nextError
 }
 
-func (f *fakeSkizze) GetRank(ctx context.Context, in *pb.GetRequest) (*pb.GetRankReply, error) {
+func (f *fakeSkizze) GetRankings(ctx context.Context, in *pb.GetRequest) (*pb.GetRankingsReply, error) {
 	f.lastRequest = in
-	return f.nextReply.(*pb.GetRankReply), f.nextError
+	return f.nextReply.(*pb.GetRankingsReply), f.nextError
 }
