@@ -22,8 +22,9 @@ const (
 
 // Sketch describes the details of a sketch
 type Sketch struct {
-	Name string
-	Type SketchType
+	Name       string
+	Type       SketchType
+	Properties *Properties
 }
 
 func newSketchFromRaw(s *pb.Sketch) *Sketch {
@@ -31,16 +32,18 @@ func newSketchFromRaw(s *pb.Sketch) *Sketch {
 		return nil
 	}
 	return &Sketch{
-		Name: s.GetName(),
-		Type: getSketchTypeForRawType(s.GetType()),
+		Name:       s.GetName(),
+		Type:       getSketchTypeForRawType(s.GetType()),
+		Properties: newPropertiesFromRaw(s.GetProperties()),
 	}
 }
 
 func getRawSketchFromSketch(s Sketch) *pb.Sketch {
 	t := getRawSketchForSketchType(s.Type)
 	return &pb.Sketch{
-		Name: &s.Name,
-		Type: &t,
+		Name:       &s.Name,
+		Type:       &t,
+		Properties: newRawPropertiesFromProperties(s.Properties),
 	}
 }
 
