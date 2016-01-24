@@ -27,6 +27,8 @@ func main() {
 	// Let's add some more values to the domain
 	client.AddToDomain(name, "alvin", "alvin", "simon", "claire", "patrick", "rajendra")
 	printSketches(name, client)
+
+	client.DeleteDomain(name)
 }
 
 func printSketches(name string, client *skizze.Client) {

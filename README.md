@@ -21,7 +21,7 @@ go get github.com/skizzehq/goskizze/skizze
 
 ### Example
 
-```golang
+```go
 package main
 
 import (
@@ -75,7 +75,12 @@ func main() {
 
 ```
 
+
+Note: Error checking has been removed for readability, but should be done in production code.
+
+
 ### TODO
+ * [ ] Support customized domain/sketch creation (with properties)
  * [ ] Benchmarking
  * [ ] Reduce allocations
 
