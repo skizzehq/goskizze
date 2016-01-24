@@ -228,6 +228,28 @@ func (c *Client) GetMembership(name string, values ...string) (ret []*Membership
 	return ret, nil
 }
 
+// GetMultiMembership queries multiple sketches for membership of the provided values.
+func (c *Client) GetMultiMembership(names []string, values ...string) (ret [][]*MembershipResult, err error) {
+	req := &pb.GetRequest{Values: values}
+	for i := range names {
+		req.Sketches = append(req.Sketches, &pb.Sketch{Name: &names[i], Type: &typeMemb})
+	}
+
+	reply, err := c.client.GetMembership(context.Background(), req)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, result := range reply.GetResults() {
+		r := []*MembershipResult{}
+		for _, m := range result.GetMemberships() {
+			r = append(r, &MembershipResult{Value: m.GetValue(), IsMember: m.GetIsMember()})
+		}
+		ret = append(ret, r)
+	}
+	return ret, nil
+}
+
 // GetFrequency queries the sketch for frequency for the provided values.
 func (c *Client) GetFrequency(name string, values ...string) (ret []*FrequencyResult, err error) {
 	rs := pb.Sketch{Name: &name, Type: &typeFreq}
@@ -237,6 +259,26 @@ func (c *Client) GetFrequency(name string, values ...string) (ret []*FrequencyRe
 	}
 	for _, m := range reply.GetResults()[0].GetFrequencies() {
 		ret = append(ret, &FrequencyResult{Value: m.GetValue(), Count: m.GetCount()})
+	}
+	return ret, nil
+}
+
+// GetMultiFrequency queries multiple sketches for the frequency of the provided values.
+func (c *Client) GetMultiFrequency(names []string, values ...string) (ret [][]*FrequencyResult, err error) {
+	req := &pb.GetRequest{Values: values}
+	for i := range names {
+		req.Sketches = append(req.Sketches, &pb.Sketch{Name: &names[i], Type: &typeFreq})
+	}
+	reply, err := c.client.GetFrequency(context.Background(), req)
+	if err != nil {
+		return nil, err
+	}
+	for _, result := range reply.GetResults() {
+		r := []*FrequencyResult{}
+		for _, m := range result.GetFrequencies() {
+			r = append(r, &FrequencyResult{Value: m.GetValue(), Count: m.GetCount()})
+		}
+		ret = append(ret, r)
 	}
 	return ret, nil
 }
@@ -254,7 +296,24 @@ func (c *Client) GetRankings(name string) (ret []*RankingsResult, err error) {
 	return ret, nil
 }
 
-// GetCardinality queries the sketch for the top rankings.
+// GetMultiRankings queries multiple sketches for the top rankings.
+func (c *Client) GetMultiRankings(names []string) (ret [][]*RankingsResult, err error) {
+	req := &pb.GetRequest{}
+	for i := range names {
+		req.Sketches = append(req.Sketches, &pb.Sketch{Name: &names[i], Type: &typeRank})
+	}
+	reply, err := c.client.GetRankings(context.Background(), req)
+	for _, result := range reply.GetResults() {
+		r := []*RankingsResult{}
+		for _, m := range result.GetRankings() {
+			r = append(r, &RankingsResult{Value: m.GetValue(), Count: m.GetCount()})
+		}
+		ret = append(ret, r)
+	}
+	return ret, nil
+}
+
+// GetCardinality queries the sketch for the cardinality of items.
 func (c *Client) GetCardinality(name string) (int64, error) {
 	rs := pb.Sketch{Name: &name, Type: &typeCard}
 	reply, err := c.client.GetCardinality(context.Background(), &pb.GetRequest{Sketches: []*pb.Sketch{&rs}})
@@ -262,4 +321,21 @@ func (c *Client) GetCardinality(name string) (int64, error) {
 		return 0, err
 	}
 	return reply.GetResults()[0].GetCardinality(), nil
+}
+
+// GetMultiCardinality queries multiple sketches for the cardinality of items.
+func (c *Client) GetMultiCardinality(names []string) (ret []int64, err error) {
+	req := &pb.GetRequest{}
+	for i := range names {
+		req.Sketches = append(req.Sketches, &pb.Sketch{Name: &names[i], Type: &typeCard})
+	}
+	reply, err := c.client.GetCardinality(context.Background(), req)
+
+	if err != nil {
+		return nil, err
+	}
+	for _, result := range reply.GetResults() {
+		ret = append(ret, result.GetCardinality())
+	}
+	return ret, nil
 }

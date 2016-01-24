@@ -9,15 +9,17 @@ var (
 	defaultMembErrorRate float32 = 0.01
 	defaultFreqUnique    int64   = 100000
 	defaultFreqErrorRate float32 = 0.01
-	defaultRankSize      int64   = 101
+	defaultRankSize      int64   = 100
 )
 
 // Properties are configuration settings for a Sketch.
-// Size is used by Rankings Sketches to determine the number of rankings this Sketch should track e.g. top 10, top 100, top 1000
 type Properties struct {
 	MaxUniqueItems int64
 	ErrorRate      float32
-	Size           int64
+
+	// Size is used by Rankings sketches to determine the number of rankings this
+	// Sketch should track e.g. top 10, top 100, top 1000
+	Size int64
 }
 
 func newPropertiesFromRaw(r *pb.SketchProperties) *Properties {
