@@ -2,10 +2,6 @@
 
 goskizze is a [Go](https://golang.org) client for the [Skizze](https://github.com/skizzehq/skizze) database.
 
-### Features
- * Simple API with 100% coverage
- * Thread-safe
-
 
 ### Documentation
  * [API Reference](https://godoc.org/github.com/skizzehq/goskizze/skizze)
@@ -75,6 +71,30 @@ func main() {
 
 ```
 
+Output:
+
+
+```
+MEMB: alvin is in testdomain: true
+MEMB: simon is in testdomain: true
+MEMB: theodore is in testdomain: true
+MEMB: gary is in testdomain: false
+
+FREQ: alvin appears in testdomain 19 times
+FREQ: simon appears in testdomain 14 times
+FREQ: theodore appears in testdomain 9 times
+FREQ: gary appears in testdomain 0 times
+
+RANK: #0 = alvin (count=19)
+RANK: #1 = simon (count=14)
+RANK: #2 = theodore (count=9)
+RANK: #3 = claire (count=5)
+RANK: #4 = patrick (count=5)
+RANK: #5 = rajendra (count=5)
+
+CARD: There are 6 items in the testdomain domain
+```
+
 
 Note: Error checking has been removed for readability, but should be done in production code.
 
@@ -91,4 +111,3 @@ goskizze is available under the Apache License, Version 2.0.
 
 ### Authors
 - [Neil Jagdish Patel](https://twitter.com/njpatel)
-- [Seif Lotfy](https://twitter.com/seiflotfy)
