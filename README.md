@@ -91,3 +91,4 @@ goskizze is available under the Apache License, Version 2.0.
 
 ### Authors
 - [Neil Jagdish Patel](https://twitter.com/njpatel)
+- [Seif Lotfy](https://twitter.com/seiflotfy)
