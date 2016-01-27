@@ -147,6 +147,37 @@ func (c *Client) CreateDomain(name string) (*Domain, error) {
 	return newDomainFromRaw(reply), nil
 }
 
+// CreateDomainWithProperties creates a domain with customized properties.
+func (c *Client) CreateDomainWithProperties(name string, props *DomainProperties) (*Domain, error) {
+	rd := &pb.Domain{Name: &name}
+
+	rd.Sketches = append(rd.Sketches, &pb.Sketch{
+		Name:       &name,
+		Type:       &typeMemb,
+		Properties: newRawPropertiesFromProperties(&props.MembershipProperties),
+	})
+	rd.Sketches = append(rd.Sketches, &pb.Sketch{
+		Name:       &name,
+		Type:       &typeFreq,
+		Properties: newRawPropertiesFromProperties(&props.FrequencyProperties),
+	})
+	rd.Sketches = append(rd.Sketches, &pb.Sketch{
+		Name:       &name,
+		Type:       &typeRank,
+		Properties: newRawPropertiesFromProperties(&props.RankingsProperties),
+	})
+	rd.Sketches = append(rd.Sketches, &pb.Sketch{
+		Name: &name,
+		Type: &typeCard,
+	})
+
+	reply, err := c.client.CreateDomain(context.Background(), rd)
+	if err != nil {
+		return nil, err
+	}
+	return newDomainFromRaw(reply), nil
+}
+
 // DeleteDomain deletes a domain
 func (c *Client) DeleteDomain(name string) error {
 	rd := &pb.Domain{Name: &name}

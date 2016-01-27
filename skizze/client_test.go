@@ -198,6 +198,42 @@ func TestCreateDomain(t *testing.T) {
 	assert.Equal("mydomain", req.GetName())
 }
 
+func TestCreateDomainWithProperties(t *testing.T) {
+	assert := assert.New(t)
+
+	c, fs := getClient(t)
+	defer closeAll(c, fs)
+
+	fs.nextReply = &pb.Domain{
+		Name: stringp("mydomain"),
+	}
+
+	d, err := c.CreateDomainWithProperties("mydomain", &DomainProperties{
+		MembershipProperties: Properties{
+			MaxUniqueItems: 256,
+			ErrorRate:      0.6,
+		},
+		FrequencyProperties: Properties{
+			MaxUniqueItems: 512,
+			ErrorRate:      0.8,
+		},
+		RankingsProperties: Properties{
+			Size: 101,
+		},
+	})
+	assert.Nil(err)
+	assert.NotNil(d)
+	assert.Equal("mydomain", d.Name)
+
+	req := fs.lastRequest.(*pb.Domain)
+	assert.Equal("mydomain", req.GetName())
+	assert.Equal(int64(256), req.GetSketches()[0].GetProperties().GetMaxUniqueItems())
+	assert.Equal(float32(0.6), req.GetSketches()[0].GetProperties().GetErrorRate())
+	assert.Equal(int64(512), req.GetSketches()[1].GetProperties().GetMaxUniqueItems())
+	assert.Equal(float32(0.8), req.GetSketches()[1].GetProperties().GetErrorRate())
+	assert.Equal(int64(101), req.GetSketches()[2].GetProperties().GetSize())
+}
+
 func TestDeleteDomain(t *testing.T) {
 	assert := assert.New(t)
 

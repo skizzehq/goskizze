@@ -97,7 +97,7 @@ Note: Error checking has been removed for readability, but should be done in pro
 
 
 ### TODO
- * [ ] Support customized domain/sketch creation (with properties)
+ * [x] Support customized domain/sketch creation (with properties)
  * [ ] Benchmarking
  * [ ] Reduce allocations
 

@@ -1,7 +1,7 @@
 // Package skizze is a client for the Skizze database.
 //
 // The Skizze repository (https://github.com/skizzehq/skizze) provides more information about
-// Skizze and now to use it.
+// Skizze and how to use it.
 //
 // Example:
 //
