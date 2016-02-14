@@ -8,7 +8,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
-	pb "github.com/skizzehq/goskizze/datamodel"
+	pb "github.com/skizzehq/goskizze/protobuf"
 )
 
 type fakeSkizze struct {
