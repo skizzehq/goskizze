@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	pb "github.com/skizzehq/goskizze/datamodel"
+	pb "github.com/skizzehq/goskizze/protobuf"
 	. "github.com/skizzehq/goskizze/skizze"
 )
 

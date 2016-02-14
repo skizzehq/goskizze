@@ -1,7 +1,7 @@
 package skizze
 
 import (
-	pb "github.com/skizzehq/goskizze/datamodel"
+	pb "github.com/skizzehq/goskizze/protobuf"
 )
 
 // Domain describes details of a Skizze domain

@@ -3,7 +3,7 @@ package skizze
 import (
 	"log"
 
-	pb "github.com/skizzehq/goskizze/datamodel"
+	pb "github.com/skizzehq/goskizze/protobuf"
 )
 
 // SketchType is the kind of sketch
