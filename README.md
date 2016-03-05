@@ -12,7 +12,7 @@ goskizze is a [Go](https://golang.org) client for the [Skizze](https://github.co
 Install goskizze with the `go get` command:
 
 ```
-go get github.com/skizzehq/goskizze/skizze
+go get gopkg.in/skizzehq/goskizze.v1/skizze
 ```
 
 ### Example
@@ -22,7 +22,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/skizzehq/goskizze/skizze"
+	"gopkg.in/skizzehq/goskizze.v1/skizze"
 )
 
 func main() {
