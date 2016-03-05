@@ -50,30 +50,6 @@ func (c *Client) Close() {
 	}
 }
 
-// CreateSnapshot queues a snapshot operation.
-func (c *Client) CreateSnapshot() (*Snapshot, error) {
-	reply, err := c.client.CreateSnapshot(context.Background(), &pb.CreateSnapshotRequest{})
-	if err != nil {
-		return nil, err
-	}
-	return &Snapshot{
-		Status:  snapshotStatusFromRaw(reply.GetStatus()),
-		Message: reply.GetStatusMessage(),
-	}, nil
-}
-
-// GetSnapshot retrieves the information on the current or last snapshot.
-func (c *Client) GetSnapshot() (*Snapshot, error) {
-	reply, err := c.client.GetSnapshot(context.Background(), &pb.GetSnapshotRequest{})
-	if err != nil {
-		return nil, err
-	}
-	return &Snapshot{
-		Status:  snapshotStatusFromRaw(reply.GetStatus()),
-		Message: reply.GetStatusMessage(),
-	}, nil
-}
-
 // ListAll gets all the available Sketches.
 func (c *Client) ListAll() (ret []*Sketch, err error) {
 	reply, err := c.client.ListAll(context.Background(), &pb.Empty{})
